@@ -2,13 +2,13 @@
 using System.IO;
 using System.Collections.Generic;
 
-// Аналог @dataclass для модели процессора и операции
+
 public record ProcessorModel(int BaseCost, int CacheMissPenalty, int BranchMispredictionPenalty);
 public record Operation(string Name, int MemoryAccesses, int Branches);
 
 class Program
 {
-    // Отдельные обязательные функции по заданию
+  
     static int BestCase(Operation op, ProcessorModel model) => model.BaseCost;
 
     static int WorstCase(Operation op, ProcessorModel model)
