@@ -1,12 +1,12 @@
-# Модель процессора: base_cost cache_miss_penalty branch_misprediction_penalty deadline
-1 20 10 100
+# Параметры процессора: БазоваяСтоимость; ШтрафКэша; ШтрафВетвления; Дедлайн
+1; 15; 12; 120
 
-# Операции: name memory_accesses branches
-Read_Sensor_Status 1 0
-Read_Sensor_Data 2 0
-Check_Lower_Bound 0 1
-Check_Upper_Bound 0 1
-Apply_Filter_Weight 0 0
-Calculate_Average 0 0
-Write_Log_Buffer 0 0
-Trigger_Interrupt_Ack 0 0
+# Операции: Название; ОбращенияКПамяти; Ветвления
+Чтение статуса датчика; 1; 0
+Чтение данных датчика; 2; 0
+Проверка контрольной суммы; 1; 1
+Фильтрация Калмана; 2; 0
+Проверка аварийных границ; 0; 2
+Запись в историю; 2; 0
+Сброс флага прерывания; 1; 0
+Выход из обработчика; 0; 0

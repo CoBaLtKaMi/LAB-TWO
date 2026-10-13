@@ -2,13 +2,13 @@
 using System.IO;
 using System.Collections.Generic;
 
-
+// Модели для хранения процессора и операции
 public record ProcessorModel(int BaseCost, int CacheMissPenalty, int BranchMispredictionPenalty);
 public record Operation(string Name, int MemoryAccesses, int Branches);
 
 class Program
 {
-  
+    // Обязательные функции по заданию
     static int BestCase(Operation op, ProcessorModel model) => model.BaseCost;
 
     static int WorstCase(Operation op, ProcessorModel model)
@@ -52,6 +52,9 @@ class Program
 
     static void Main()
     {
+        // Установка поддержки русского языка в консоли
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         string filepath = Path.Combine(AppContext.BaseDirectory, "data", "input.txt");
 
         if (!File.Exists(filepath))
@@ -64,13 +67,16 @@ class Program
         int deadline = 0;
         var fragment = new List<Operation>();
 
-        // Парсинг кастомного текстового конфигурационного файла без магических чисел
+        // Чтение CSV-формата с разделением через точку с запятой
         foreach (var line in File.ReadAllLines(filepath))
         {
             var trimmed = line.Trim();
             if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#")) continue;
 
-            var parts = trimmed.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            // Разделяем строку по точке с запятой и убираем лишние пробелы вокруг значений
+            var parts = trimmed.Split(';');
+            for (int i = 0; i < parts.Length; i++) parts[i] = parts[i].Trim();
+
             if (model == null)
             {
                 model = new ProcessorModel(int.Parse(parts[0]), int.Parse(parts[1]), int.Parse(parts[2]));
@@ -82,16 +88,16 @@ class Program
             }
         }
 
-        // Вывод таблицы операций
-        Console.WriteLine(new string('=', 85));
-        Console.WriteLine($"{"Операция",-28} | {"Память",-8} | {"Ветвления",-9} | {"BCET (такт)",-13} | {"WCET (такт)",-13}");
-        Console.WriteLine(new string('-', 85));
+        // Вывод красивой таблицы на русском языке
+        Console.WriteLine(new string('=', 95));
+        Console.WriteLine($"{"Операция",-32} | {"Память",-8} | {"Ветвления",-9} | {"BCET (такт)",-13} | {"WCET (такт)",-13}");
+        Console.WriteLine(new string('-', 95));
 
         foreach (var op in fragment)
         {
-            Console.WriteLine($"{op.Name,-28} | {op.MemoryAccesses,-8} | {op.Branches,-9} | {BestCase(op, model),-13} | {WorstCase(op, model),-13}");
+            Console.WriteLine($"{op.Name,-32} | {op.MemoryAccesses,-8} | {op.Branches,-9} | {BestCase(op, model),-13} | {WorstCase(op, model),-13}");
         }
-        Console.WriteLine(new string('=', 85));
+        Console.WriteLine(new string('=', 95));
 
         // Вычисление итоговых метрик
         int totalBcet = Bcet(fragment, model);
@@ -107,7 +113,7 @@ class Program
         Console.WriteLine($"Вклад штрафов памяти:                    {breakdown.Memory} тактов");
         Console.WriteLine($"Вклад штрафов ветвлений:                 {breakdown.Branches} тактов");
         Console.WriteLine($"Заданный дедлайн:                        {deadline} тактов");
-        Console.WriteLine(new string('-', 50));
+        Console.WriteLine(new string('-', 55));
 
         if (totalWcet <= deadline)
         {
@@ -115,8 +121,8 @@ class Program
         }
         else
         {
-            Console.WriteLine("ВНИМАНИЕ! Фрагмент НЕ УКЛАДЫВАЕТСЯ в дедлайн в худшем случае.");
+            Console.WriteLine("ЗАКЛЮЧЕНИЕ: ВНИМАНИЕ! Фрагмент НЕ УКЛАДЫВАЕТСЯ в дедлайн в худшем случае.");
         }
-        Console.WriteLine(new string('=', 85));
+        Console.WriteLine(new string('=', 95));
     }
 }
