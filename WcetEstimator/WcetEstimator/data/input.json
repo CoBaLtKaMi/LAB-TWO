@@ -1,0 +1,50 @@
+{
+  "processor_model": {
+    "base_cost": 1,
+    "cache_miss_penalty": 15,
+    "branch_misprediction_penalty": 12
+  },
+  "deadline": 200,
+  "fragment": [
+    {
+      "name": "Чтение статуса датчика",
+      "memory_accesses": 1,
+      "branches": 0
+    },
+    {
+      "name": "Чтение данных датчика",
+      "memory_accesses": 2,
+      "branches": 0
+    },
+    {
+      "name": "Проверка контрольной суммы",
+      "memory_accesses": 1,
+      "branches": 1
+    },
+    {
+      "name": "Фильтрация Калмана",
+      "memory_accesses": 2,
+      "branches": 0
+    },
+    {
+      "name": "Проверка аварийных границ",
+      "memory_accesses": 0,
+      "branches": 2
+    },
+    {
+      "name": "Запись в историю",
+      "memory_accesses": 2,
+      "branches": 0
+    },
+    {
+      "name": "Сброс флага прерывания",
+      "memory_accesses": 1,
+      "branches": 0
+    },
+    {
+      "name": "Выход из обработчика",
+      "memory_accesses": 0,
+      "branches": 0
+    }
+  ]
+}

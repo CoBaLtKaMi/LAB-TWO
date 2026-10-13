@@ -1,17 +1,41 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Text.Json; // Подключаем библиотеку для работы с JSON
+using System.Text.Json.Serialization;
 
-// Структуры данных для параметров процессора и операции
-public record ProcessorModel(int BaseCost, int CacheMissPenalty, int BranchMispredictionPenalty);
-public record Operation(string Name, int MemoryAccesses, int Branches);
+// Модели данных (названия свойств должны совпадать с ключами в JSON-файле)
+public record ProcessorModel(
+    [property: JsonPropertyName("base_cost")] int BaseCost,
+    [property: JsonPropertyName("cache_miss_penalty")] int CacheMissPenalty,
+    [property: JsonPropertyName("branch_misprediction_penalty")] int BranchMispredictionPenalty
+);
+
+public record Operation(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("memory_accesses")] int MemoryAccesses,
+    [property: JsonPropertyName("branches")] int Branches
+);
+
+// Вспомогательный класс-обертка для десериализации корневого JSON
+public class RootConfig
+{
+    [JsonPropertyName("processor_model")]
+    public ProcessorModel ProcessorModel { get; set; }
+
+    [JsonPropertyName("deadline")]
+    public int Deadline { get; set; }
+
+    [JsonPropertyName("fragment")]
+    public List<Operation> Fragment { get; set; }
+}
 
 class Program
 {
     // Время выполнения операции в лучшем случае (без задержек)
     static int BestCase(Operation op, ProcessorModel model) => model.BaseCost;
 
-    // Время выполнения операции в худшем случае (с учетом максимальных штрафов)
+    // Время выполнения операции в худшем случае (с учетом штрафов)
     static int WorstCase(Operation op, ProcessorModel model)
     {
         int memoryPenalty = op.MemoryAccesses * model.CacheMissPenalty;
@@ -35,7 +59,7 @@ class Program
         return total;
     }
 
-    // Расчет коэффициента недетерминизма (непредсказуемости)
+    // Расчет коэффициента недетерминизма
     static double NondeterminismRatio(List<Operation> fragment, ProcessorModel model)
     {
         int b = Bcet(fragment, model);
@@ -59,8 +83,8 @@ class Program
     {
         Console.OutputEncoding = System.Text.Encoding.UTF8;
 
-        // Поиск файла конфигурации в папке приложения
-        string filepath = Path.Combine(AppContext.BaseDirectory, "data", "input.txt");
+        // Поиск файла конфигурации JSON в папке приложения
+        string filepath = Path.Combine(AppContext.BaseDirectory, "data", "input.json");
 
         if (!File.Exists(filepath))
         {
@@ -68,31 +92,21 @@ class Program
             return;
         }
 
-        ProcessorModel model = null;
-        int deadline = 0;
-        var fragment = new List<Operation>();
+        // Чтение всего содержимого файла JSON в виде одной текстовой строки
+        string jsonString = File.ReadAllText(filepath);
 
-        // Чтение данных из текстового файла
-        foreach (var line in File.ReadAllLines(filepath))
+        // Автоматическое превращение строки JSON в структурированные объекты C#
+        RootConfig config = JsonSerializer.Deserialize<RootConfig>(jsonString);
+
+        if (config == null || config.ProcessorModel == null || config.Fragment == null)
         {
-            var trimmed = line.Trim();
-            if (string.IsNullOrEmpty(trimmed) || trimmed.StartsWith("#")) continue;
-
-            var parts = trimmed.Split(';');
-            for (int i = 0; i < parts.Length; i++) parts[i] = parts[i].Trim();
-
-            if (model == null)
-            {
-                // Первая строка: параметры процессора и дедлайн
-                model = new ProcessorModel(int.Parse(parts[0]), int.Parse(parts[1]), int.Parse(parts[2]));
-                deadline = int.Parse(parts[3]);
-            }
-            else
-            {
-                // Последующие строки: операции
-                fragment.Add(new Operation(parts[0], int.Parse(parts[1]), int.Parse(parts[2])));
-            }
+            Console.WriteLine("Ошибка: Не удалось корректно распознать структуру JSON файла.");
+            return;
         }
+
+        ProcessorModel model = config.ProcessorModel;
+        int deadline = config.Deadline;
+        List<Operation> fragment = config.Fragment;
 
         // Вывод таблицы операций
         Console.WriteLine(new string('=', 95));
@@ -124,11 +138,11 @@ class Program
         // Проверка соблюдения условий реального времени
         if (totalWcet <= deadline)
         {
-            Console.WriteLine("ЗАКЛЮЧЕНИЕ: Фрагмент гарантированно УБИРАЕТСЯ в дедлайн в худшем случае.");
+            Console.WriteLine("ВЫВОД: Фрагмент укладывается в дедлайн в худшем случае.");
         }
         else
         {
-            Console.WriteLine("ЗАКЛЮЧЕНИЕ: ВНИМАНИЕ! Фрагмент НЕ УКЛАДЫВАЕТСЯ в дедлайн в худшем случае.");
+            Console.WriteLine("ВЫВОД: Фрагмент не укладывается в дедлайн в худшем случае.");
         }
         Console.WriteLine(new string('=', 95));
     }
